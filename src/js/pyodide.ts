@@ -1,3 +1,4 @@
+export * from "./environments.js"; 
 import { setRuntimeOverride, type Runtime } from "./environments.js";
 /**
  * The main bootstrap code for loading pyodide.
@@ -260,7 +261,9 @@ export async function loadPyodide(
   } = {},
 ): Promise<PyodideAPI> {
   // Apply runtime override as early as possible so all IN_* flags reflect it
-  setRuntimeOverride(options.runtime ?? "auto");
+  if (options.runtime !== undefined) {
+    setRuntimeOverride(options.runtime); // Will handle "auto" as null internally
+  }
 
   if (options.lockFileContents && options.lockFileURL) {
     throw new Error("Can't pass both lockFileContents and lockFileURL");
