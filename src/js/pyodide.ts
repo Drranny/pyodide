@@ -1,3 +1,4 @@
+import { setRuntimeOverride, type Runtime } from "./environments.js";
 /**
  * The main bootstrap code for loading pyodide.
  */
@@ -93,6 +94,13 @@ export type ConfigType = {
  */
 export async function loadPyodide(
   options: {
+    /**
+     * Force-override runtime auto-detection.
+     * Allowed: 'auto' | 'browser' | 'webworker' | 'node' | 'deno' | 'bun'
+     * Default: 'auto'
+     */
+    runtime?: Runtime;
+
     /**
      * The URL from which Pyodide will load the main Pyodide runtime and
      * packages. It is recommended that you leave this unchanged, providing an
@@ -251,6 +259,9 @@ export async function loadPyodide(
     _snapshotDeserializer?: (obj: any) => any;
   } = {},
 ): Promise<PyodideAPI> {
+  // Apply runtime override as early as possible so all IN_* flags reflect it
+  setRuntimeOverride(options.runtime ?? "auto");
+
   if (options.lockFileContents && options.lockFileURL) {
     throw new Error("Can't pass both lockFileContents and lockFileURL");
   }
