@@ -270,9 +270,17 @@ export async function loadPyodide(
   }
   await initNodeModules();
 
-  // Relative paths cause havoc.
-  let indexURL = options.indexURL || (await calculateDirname());
-  indexURL = withTrailingSlash(resolvePath(indexURL));
+  // Normalize indexURL into a proper URL object (support http(s):// and file://)
+  let indexURL: string;
+  {
+    const raw = options.indexURL || (await calculateDirname());
+    if (/^(file|https?):\/\//.test(raw)) {
+      indexURL = withTrailingSlash(raw);
+    } else {
+      const base = globalThis.location?.href ?? `file://${process.cwd()}/`;
+      indexURL = new URL(withTrailingSlash(resolvePath(raw)), base).href;
+    }
+  }
   const options_ = options as ConfigType;
 
   options_.packageBaseUrl = withTrailingSlash(options_.packageBaseUrl);
@@ -283,8 +291,8 @@ export async function loadPyodide(
   );
 
   if (!options.lockFileContents) {
-    const lockFileURL = options.lockFileURL ?? indexURL + "pyodide-lock.json";
-    options_.lockFileContents = loadLockFile(lockFileURL);
+    const lockFileURL = options.lockFileURL ?? new URL("pyodide-lock.json", indexURL).href;
+   options_.lockFileContents = loadLockFile(lockFileURL);
     // packageBaseUrl isn't present, try using base location of lockFileUrl. If
     // lockFileURL is relative, use location as the base URL.
     options_.packageBaseUrl ??= calculateInstallBaseUrl(lockFileURL);
@@ -328,7 +336,7 @@ export async function loadPyodide(
   // Users can then do a static import of the script in environments where
   // dynamic importing is not allowed or not desirable, like module-type service workers
   if (typeof _createPyodideModule !== "function") {
-    const scriptSrc = `${config.indexURL}pyodide.asm.js`;
+    const scriptSrc = new URL("pyodide.asm.js", config.indexURL).href;
     await loadScript(scriptSrc);
   }
 
