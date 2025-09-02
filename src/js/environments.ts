@@ -134,6 +134,20 @@ function __recomputeFlags() {
     typeof __dirname !== "undefined";
 
   IN_NODE_ESM = IN_NODE && !IN_NODE_COMMONJS;
+
+  // Modify Safari detection to respect runtime override
+  IN_SAFARI =
+    !__forcedRuntime && // Only detect in auto mode
+    typeof navigator === "object" &&
+    typeof navigator.userAgent === "string" &&
+    navigator.userAgent.indexOf("Chrome") == -1 &&
+    navigator.userAgent.indexOf("Safari") > -1;
+
+  // Modify Shell detection to respect runtime override  
+  IN_SHELL =
+    !__forcedRuntime && 
+    typeof read == "function" && 
+    typeof load === "function";
 }
 /** Public API:
  * Force-override runtime detection. Pass 'auto' or null to restore auto-detection.
@@ -143,5 +157,4 @@ export function setRuntimeOverride(runtime: Runtime | null) {
   __forcedRuntime = runtime ?? null;
   __recomputeFlags();
 }
-/** Initialize flags at module load so existing imports see consistent values. */
 __recomputeFlags();
