@@ -9,7 +9,6 @@ import {
   loadScript,
   initNodeModules,
   resolvePath,
-  loadLockFile,
   calculateInstallBaseUrl,
 } from "./compat";
 
@@ -130,11 +129,8 @@ export async function loadPyodide(
     if (/^(file|https?):\/\//.test(raw)) {
       indexURL = withTrailingSlash(raw);
     } else {
-      // Safely handle Node.js process.cwd()
-      const base =
-        typeof globalThis.location !== "undefined"
-          ? globalThis.location.href
-          : `file://${process.cwd()}/`;
+      const base = globalThis.location?.href ?? 
+    `file://${(globalThis as any).process?.cwd?.() ?? '.'}/`;
       indexURL = new URL(withTrailingSlash(resolvePath(raw)), base).href;
     }
   }
@@ -148,12 +144,12 @@ export async function loadPyodide(
   );
 
   if (!options.lockFileContents) {
-    const lockFileURL = options.lockFileURL ?? indexURL + "pyodide-lock.json";
-    options_.lockFileContents = loadLockFile(lockFileURL);
+    const lockFileURL = options.lockFileURL ?? new URL("pyodide-lock.json", indexURL).href;
+    options_.lockFileContents = loadLockFile();  // Modified to use the new function
     // packageBaseUrl isn't present, try using base location of lockFileUrl. If
     // lockFileURL is relative, use location as the base URL.
     options_.packageBaseUrl ??= calculateInstallBaseUrl(lockFileURL);
-  }
+    }
   options_.indexURL = indexURL;
 
   if (options_.packageCacheDir) {
@@ -254,4 +250,18 @@ If you updated the Pyodide version, make sure you also updated the 'indexURL' pa
   // packageIndexReady? I don't remember why.
   API.initializeStreams(config.stdin, config.stdout, config.stderr);
   return pyodide;
+}
+
+/**
+ * Load and parse the pyodide lock file
+ * @returns Promise<Lockfile> The parsed lock file contents
+ */
+async function loadLockFile(): Promise<Lockfile> {
+    const baseUrl = (globalThis as any).process?.env?.PYODIDE_BASE_URL ?? ".";
+    const url = `${baseUrl}/pyodide-lock.json`;
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error(`Failed to fetch lock file: ${res.status}`);
+    }
+    return await res.json();
 }
