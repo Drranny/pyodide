@@ -145,5 +145,4 @@ export function detectEnvironment(): Record<string, boolean> {
 // Register functions with API if available
 if (typeof API !== "undefined") {
   API.detectEnvironment = detectEnvironment;
-  API.overrideRuntime = overrideRuntime;
 }

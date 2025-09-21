@@ -505,7 +505,6 @@ export interface API {
   restoreState: (state: any) => void;
   scheduleCallback: (callback: () => void, timeout: number) => void;
   detectEnvironment: () => Record<string, boolean>;
-  overrideRuntime: (runtime: "browser" | "node" | "deno" | "bun") => void;
 
   package_loader: any;
   importlib: any;

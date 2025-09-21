@@ -71,8 +71,6 @@ API.scheduleCallback = scheduleCallback;
 
 /** @private */
 API.detectEnvironment = detectEnvironment;
-/** @private */
-API.overrideRuntime = overrideRuntime;
 
 // @ts-ignore
 if (typeof AbortSignal !== "undefined" && AbortSignal.any) {
