@@ -8,7 +8,11 @@ import { version } from "./version";
 import { setStdin, setStdout, setStderr } from "./streams";
 import { scheduleCallback } from "./scheduler";
 import { TypedArray, PackageData, FSType, Lockfile } from "./types";
-import { detectEnvironment, RUNTIME_ENV } from "./environments";
+import {
+  detectEnvironment,
+  RUNTIME_ENV,
+  overrideRuntime,
+} from "./environments";
 // @ts-ignore
 import LiteralMap from "./common/literal-map";
 import abortSignalAny from "./common/abortSignalAny";
@@ -71,6 +75,8 @@ API.scheduleCallback = scheduleCallback;
 
 /** @private */
 API.detectEnvironment = detectEnvironment;
+/** @private */
+API.overrideRuntime = overrideRuntime;
 
 // @ts-ignore
 if (typeof AbortSignal !== "undefined" && AbortSignal.any) {

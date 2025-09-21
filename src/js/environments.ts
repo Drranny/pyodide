@@ -94,6 +94,43 @@ function updateDerivedFlags(runtimeEnv: RuntimeEnv) {
     (globalThis as any).self instanceof (globalThis as any).WorkerGlobalScope;
 }
 
+/**
+ * Override runtime environment flags
+ * This allows forcing specific runtime detection for testing purposes
+ * @param runtime - The runtime to force ('browser', 'node', 'deno', 'bun')
+ * @private
+ */
+export function overrideRuntime(runtime: "browser" | "node" | "deno" | "bun") {
+  // Get the global runtime environment object
+  const runtimeEnv = getGlobalRuntimeEnv();
+
+  // Reset all flags to false to prevent human error
+  Object.keys(runtimeEnv).forEach(
+    (key) => (runtimeEnv[key as keyof RuntimeEnv] = false),
+  );
+
+  switch (runtime) {
+    case "node":
+      runtimeEnv.IN_NODE = true;
+      // IN_NODE_COMMONJS and IN_NODE_ESM will be derived in updateDerivedFlags()
+      break;
+    case "browser":
+      runtimeEnv.IN_BROWSER = true;
+      break;
+    case "deno":
+      runtimeEnv.IN_DENO = true;
+      runtimeEnv.IN_NODE = true; // Deno is Node-compatible
+      break;
+    case "bun":
+      runtimeEnv.IN_BUN = true;
+      runtimeEnv.IN_NODE = true; // Bun is Node-compatible
+      break;
+  }
+
+  // Update derived flags (including IN_NODE_*, IN_BROWSER_*)
+  updateDerivedFlags(runtimeEnv);
+}
+
 // No individual flag exports; use RUNTIME_ENV directly
 
 /**
@@ -108,4 +145,5 @@ export function detectEnvironment(): Record<string, boolean> {
 // Register functions with API if available
 if (typeof API !== "undefined") {
   API.detectEnvironment = detectEnvironment;
+  API.overrideRuntime = overrideRuntime;
 }
